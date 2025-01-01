@@ -95,10 +95,6 @@ export const Delete = async (req , res) => {
         return res.status(400).json({message:`User not found` , success:false})
       }
       res.clearCookie("token")
-      console.log(data);
-      console.log(data.imageDetails);
-      console.log(data.imageDetails.imageId);
-      
       await cloudinary.uploader.destroy(data.imageDetails.imageId);
        await User_model.deleteOne({email});
       return res.status(200).json({message:`Account delete successfully` , success:true})
