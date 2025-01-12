@@ -10,7 +10,8 @@ import {
   addComment,
   deleteComment,
   getAllLikes,
- getAllComments
+ getAllComments,
+ getAllPosts,
 } from "../Controllers/blog.controller.js";
 
 const router = Router();
@@ -18,6 +19,7 @@ const router = Router();
 router.post(`/create-blog`, auth, createBlog);
 router.get(`/blogs`, auth, getMyBlogs);
 router.get(`/blogs/:id`, auth, getUserBlogs);
+router.get('/all-posts' , auth , getAllPosts)
 router.put(`/update-blog/:id`, auth, updateBlog);
 router.delete(`/delete-blog/:id`, auth, deleteBlog);
 router.post(`/reaction/:id` , auth , toggleLike);

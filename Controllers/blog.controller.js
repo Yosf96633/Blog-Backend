@@ -1,4 +1,5 @@
 import Blog_Model from "../Models/blog.model.js";
+import Follow_Model from "../Models/follow.model.js";
 import cloudinary from "../Config/cloudinary.js";
 import mongoose from "mongoose";
 export const createBlog = async (req, res) => {
@@ -9,7 +10,10 @@ export const createBlog = async (req, res) => {
     image = req.files?.image;
     const { _id } = req.user;
     const authorId = new mongoose.Types.ObjectId(_id);
-    if (image) result = await cloudinary.uploader.upload(image.tempFilePath , {folder:`Blogs_Images`});
+    if (image)
+      result = await cloudinary.uploader.upload(image.tempFilePath, {
+        folder: `Blogs_Images`,
+      });
     const data = await Blog_Model.create({
       title,
       content,
@@ -133,21 +137,22 @@ export const deleteBlog = async (req, res) => {
 };
 export const toggleLike = async (req, res) => {
   try {
-    const { id } = req.params; 
-    const { _id } = req.user; 
+    const { id } = req.params;
+    const { _id } = req.user;
     const blog = await Blog_Model.findById(id);
 
     if (!blog) {
-      return res.status(404).json({ message: "Blog not found", success: false });
+      return res
+        .status(404)
+        .json({ message: "Blog not found", success: false });
     }
 
     const alreadyLiked = blog.likes.includes(_id);
 
     if (alreadyLiked) {
-      blog.likes.pull(_id); 
-      
+      blog.likes.pull(_id);
 
-      await blog.save(); 
+      await blog.save();
 
       return res.status(200).json({
         message: "Blog unliked successfully",
@@ -155,8 +160,8 @@ export const toggleLike = async (req, res) => {
         blog,
       });
     } else {
-      blog.likes.addToSet(_id); 
-      await blog.save(); 
+      blog.likes.addToSet(_id);
+      await blog.save();
       return res.status(200).json({
         message: "Blog liked successfully",
         success: true,
@@ -171,82 +176,145 @@ export const toggleLike = async (req, res) => {
     });
   }
 };
-export const addComment = async (req , res) => {
-    try {
-        const { id } = req.params;
-        const {_id} = req.user;
-        const {text} = req.body;
-        const blog = await Blog_Model.findById(id);
-        if(!blog){
-         return res.status(404).json({message:`Blog not found` , success:false});
-        }
-        blog.comments.push({user: _id , text});
-        await blog.save();
-        return res.status(201).json({message:`Comment added` , success:true});
-    } catch (error) {
-        console.log("Error in addComment: ", error.message);
-        return res.status(500).json({
-          message: "Internal Server Error",
-          success: false,
-        });
+export const addComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { _id } = req.user;
+    const { text } = req.body;
+    const blog = await Blog_Model.findById(id);
+    if (!blog) {
+      return res
+        .status(404)
+        .json({ message: `Blog not found`, success: false });
     }
-}
-export const deleteComment = async (req , res) => {
-    try {
-        const {id , commentId} = req.params;
-        const blog = await Blog_Model.findById(id);
-        if(!blog){
-            return res.status(404).json({message:`Blog not found` , success:false});
-        }
-        const isExist = blog.comments.find(comment => comment._id == commentId)
-        if(!isExist){
-            return res.status(404).json({message:`Comment did not found` , success:false});
-        }
-         blog.comments.pull({_id:commentId})
-        await blog.save();
-        return res.status(200).json({
-            message: "Comment deleted successfully",
-            success: true,
-          });
-    } catch (error) {
-        console.log("Error in deleteComment: ", error.message);
-        return res.status(500).json({
-          message: "Internal Server Error",
-          success: false,
-        });
+    blog.comments.push({ user: _id, text });
+    await blog.save();
+    return res.status(201).json({ message: `Comment added`, success: true });
+  } catch (error) {
+    console.log("Error in addComment: ", error.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      success: false,
+    });
+  }
+};
+export const deleteComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const blog = await Blog_Model.findById(id);
+    if (!blog) {
+      return res
+        .status(404)
+        .json({ message: `Blog not found`, success: false });
     }
-}
-export const getAllLikes = async (req , res) => {
-    try {
-        const {id} = req.params;
-        const blog = await Blog_Model.findById(id).populate({path:`likes` , select:`name`})
-        if(!blog){
-            return res.status(404).json({message:`Blog not found` , success:false});
-        }
-        return res.status(200).json({likes:blog.likes , success:true})
-    } catch (error) {
-        console.log("Error in getAllLikes: ", error.message);
-        return res.status(500).json({
-          message: "Internal Server Error",
-          success: false,
-        });
+    const isExist = blog.comments.find((comment) => comment._id == commentId);
+    if (!isExist) {
+      return res
+        .status(404)
+        .json({ message: `Comment did not found`, success: false });
     }
-}
-export const getAllComments = async (req , res) => {
-    try {
-        const {id} = req.params;
-        const blog = await Blog_Model.findById(id).populate({path:`comments.user` , select:`name`})
-        if(!blog){
-            return res.status(404).json({message:`Blog not found` , success:false});
-        }
-        return res.status(200).json({comments:blog.comments , success:true})
-    } catch (error) {
-        console.log("Error in getAllComments: ", error.message);
-        return res.status(500).json({
-          message: "Internal Server Error",
-          success: false,
-        }); 
+    blog.comments.pull({ _id: commentId });
+    await blog.save();
+    return res.status(200).json({
+      message: "Comment deleted successfully",
+      success: true,
+    });
+  } catch (error) {
+    console.log("Error in deleteComment: ", error.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      success: false,
+    });
+  }
+};
+export const getAllLikes = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const blog = await Blog_Model.findById(id).populate({
+      path: `likes`,
+      select: `name`,
+    });
+    if (!blog) {
+      return res
+        .status(404)
+        .json({ message: `Blog not found`, success: false });
     }
-}
+    return res.status(200).json({ likes: blog.likes, success: true });
+  } catch (error) {
+    console.log("Error in getAllLikes: ", error.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      success: false,
+    });
+  }
+};
+export const getAllComments = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const blog = await Blog_Model.findById(id).populate({
+      path: `comments.user`,
+      select: `name`,
+    });
+    if (!blog) {
+      return res
+        .status(404)
+        .json({ message: `Blog not found`, success: false });
+    }
+    return res.status(200).json({ comments: blog.comments, success: true });
+  } catch (error) {
+    console.log("Error in getAllComments: ", error.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      success: false,
+    });
+  }
+};
 
+export const getAllPosts = async (req, res) => {
+  try {
+    const { _id } = req.user;
 
+    if (!_id) {
+      return res
+        .status(400)
+        .json({ message: "Invalid/missing token", success: false });
+    }
+
+    const followersData = await Follow_Model.findOne(
+      { user: _id },
+      { follower: 1, _id: 0 }
+    );
+
+    if (!followersData || followersData.follower.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "No followers found", followers: [], success: true });
+    }
+
+    // Use Promise.all to resolve all promises for fetching posts from each follower
+    const posts = await Promise.all(
+      followersData.follower.map(async (followerId) => {
+        // Fetch posts for each follower and populate the 'author' field
+        const followerPosts = await Blog_Model.find({
+          author: new mongoose.Types.ObjectId(followerId),
+        })
+          .populate("author", "name imageDetails") // Populate with user details (e.g., username, email, image)
+          .sort({ createdAt: -1 }); // Optional: Sort posts by latest
+        return followerPosts;
+      })
+    );
+
+    // Flatten the posts array if necessary, as `posts` is an array of arrays
+    const flattenedPosts = posts.flat();
+
+    return res
+      .status(200)
+      .json({ message: "Posts found", data: flattenedPosts, success: true });
+  } catch (error) {
+    console.log("Error in getAllPosts: ", error.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      success: false,
+    });
+  }
+};
