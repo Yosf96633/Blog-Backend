@@ -2,6 +2,8 @@ import User_model from "../Models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import cloudinary from "../Config/cloudinary.js";
+import Blog_Model from "../Models/blog.model.js";
+import Follow_Model from "../Models/follow.model.js";
 export const Register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -87,19 +89,40 @@ export const Logout = async (req , res) => {
     return res.status(500).json({message:`Internal server error` , success:false})
   }
 }
-export const Delete = async (req , res) => {
+export const Delete = async (req, res) => {
   try {
-      const {_id , name , email} = req.userData;
-      const data = await User_model.findOne({email});
-      if(!data){
-        return res.status(400).json({message:`User not found` , success:false})
-      }
-      res.clearCookie("token")
+    const { _id, name, email } = req.userData;
+    
+    // Find the user by email
+    const data = await User_model.findOne({ email });
+    if (!data) {
+      return res.status(400).json({ message: `User not found`, success: false });
+    }
+    
+    // Clear authentication token (cookie)
+    res.clearCookie("token", { httpOnly: true, secure: true }); // Add the secure flag if using https
+
+    // Delete image from Cloudinary
+    if (data.imageDetails?.imageId) {
       await cloudinary.uploader.destroy(data.imageDetails.imageId);
-       await User_model.deleteOne({email});
-      return res.status(200).json({message:`Account delete successfully` , success:true})
+    }
+
+    // Delete all blogs written by the user
+    await Blog_Model.deleteMany({ author: _id });
+
+    // Remove the user from all followers' followings
+    await Follow_Model.updateMany({ follower: _id }, { $pull: { following: _id } });
+
+    // Remove the user from all followings' followers
+    await Follow_Model.updateMany({ following: _id }, { $pull: { follower: _id } });
+    await Follow_Model.findOneAndDelete({user : _id});
+
+    // Delete the user from the database
+    await User_model.deleteOne({ email });
+
+    return res.status(200).json({ message: `Account deleted successfully`, success: true });
   } catch (error) {
-    console.log(`Error in Delete ${error.message}`);
-    return res.status(500).json({message:`Internal server error` , success:false})
+    console.log(`Error in Delete: ${error.message}`);
+    return res.status(500).json({ message: `Internal server error`, success: false });
   }
-}
+};

@@ -291,20 +291,17 @@ export const getAllPosts = async (req, res) => {
         .json({ message: "No followers found", followers: [], success: true });
     }
 
-    // Use Promise.all to resolve all promises for fetching posts from each follower
     const posts = await Promise.all(
       followersData.follower.map(async (followerId) => {
-        // Fetch posts for each follower and populate the 'author' field
+       
         const followerPosts = await Blog_Model.find({
           author: new mongoose.Types.ObjectId(followerId),
         })
-          .populate("author", "name imageDetails") // Populate with user details (e.g., username, email, image)
-          .sort({ createdAt: -1 }); // Optional: Sort posts by latest
+          .populate("author", "name imageDetails") 
+          .sort({ createdAt: -1 });
         return followerPosts;
       })
     );
-
-    // Flatten the posts array if necessary, as `posts` is an array of arrays
     const flattenedPosts = posts.flat();
 
     return res
