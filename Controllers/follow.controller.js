@@ -61,13 +61,11 @@ export const getFollowers = async (req, res) => {
         .status(200)
         .json({ message: `No followers found`, follower: [], success: false });
     }
-    return res
-      .status(200)
-      .json({
-        message: `Followers found`,
-        follower: result.follower,
-        success: true,
-      });
+    return res.status(200).json({
+      message: `Followers found`,
+      follower: result.follower,
+      success: true,
+    });
   } catch (error) {
     console.log(`Error in getFollowers: ${error.message}`);
     return res
@@ -87,13 +85,11 @@ export const getFollowings = async (req, res) => {
         .status(200)
         .json({ message: `No following found`, following: [], success: false });
     }
-    return res
-      .status(200)
-      .json({
-        message: `Following found`,
-        following: result.following,
-        success: true,
-      });
+    return res.status(200).json({
+      message: `Following found`,
+      following: result.following,
+      success: true,
+    });
   } catch (error) {
     console.log(`Error in getFollowing: ${error.message}`);
     return res
@@ -132,15 +128,30 @@ export const numbers = async (req, res) => {
         .json({ message: `No record found`, success: false });
     }
     return res.status(200).json({
-        message:`Numbers found`,
-        numbers:{
-            followers : result.follower.length,
-            followings : result.following.length,
-        },
-        success:true
+      message: `Numbers found`,
+      numbers: {
+        followers: result.follower.length,
+        followings: result.following.length,
+      },
+      success: true,
     });
   } catch (error) {
     console.log(`Error in numbers: ${error.message}`);
     return res.status(500).json({ message: "Server Error", success: false });
   }
+};
+export const friendList = async (req, res) => {
+  const { name } = req.query;
+  if (!name) {
+    return res.status(400).json({ message: `Field required`, success: false });
+  }
+  const data = await User_Model.find({ name: name } , {password:0});
+  if (data.length === 0) {
+    return res
+      .status(200)
+      .json({ message: `No user found`, data, success: true });
+  }
+  return res
+    .status(200)
+    .json({ message: ` ${data.length} user found`, data, success: true });
 };

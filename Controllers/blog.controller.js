@@ -53,11 +53,11 @@ export const getUserBlogs = async (req, res) => {
   try {
     const { id } = req.params;
     const authorId = new mongoose.Types.ObjectId(id);
-    const blogs = await Blog_Model.find({ author: authorId });
+    const blogs = await Blog_Model.find({ author: id });
     if (blogs.length === 0)
       return res
         .status(404)
-        .json({ message: "No blogs found", success: false });
+        .json({ message: "No blogs found", success: true });
     return res.status(200).json({ blogs, success: true });
   } catch (error) {
     console.log(`Error at getUserBlogs: ${error.message}`);
@@ -282,17 +282,17 @@ export const getAllPosts = async (req, res) => {
 
     const followersData = await Follow_Model.findOne(
       { user: _id },
-      { follower: 1, _id: 0 }
+      { following: 1, _id: 0 }
     );
 
-    if (!followersData || followersData.follower.length === 0) {
+    if (!followersData || followersData.following.length === 0) {
       return res
         .status(200)
         .json({ message: "No followers found", followers: [], success: true });
     }
 
     const posts = await Promise.all(
-      followersData.follower.map(async (followerId) => {
+      followersData.following.map(async (followerId) => {
        
         const followerPosts = await Blog_Model.find({
           author: new mongoose.Types.ObjectId(followerId),
