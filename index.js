@@ -12,7 +12,7 @@ config();
 //Global Middlewares
 app.use(
   cors({
-    origin: `https://blogify-mern7.netlify.app/`,
+    origin: `https://blogify-mern7.netlify.app`,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   })
