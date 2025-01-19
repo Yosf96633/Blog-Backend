@@ -53,7 +53,7 @@ export const getUserBlogs = async (req, res) => {
   try {
     const { id } = req.params;
     const authorId = new mongoose.Types.ObjectId(id);
-    const blogs = await Blog_Model.find({ author: id });
+    const blogs = await Blog_Model.find({ author: id }).populate("author", "name imageDetails") ;
     if (blogs.length === 0)
       return res
         .status(404)

@@ -78,9 +78,14 @@ export const Login = async (req, res) => {
       return res
         .status(400)
         .json({ message: `Error in during login`, success: false });
-    res.cookie("token", token, {
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+        res.cookie("token", token, {
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+          path: "/",
+          httpOnly: true,
+          sameSite:"None",
+          secure: true,
+    
+        });
     return res
       .status(200)
       .json({
@@ -160,15 +165,13 @@ export const Delete = async (req, res) => {
 export const getUser = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
-    
     if (!id) {
       return res.status(400).json({ message: `Invalid id`, success: false });
     }
     const data = await User_model.findOne(
       { _id: new mongoose.Types.ObjectId(id) },
       { password: 0 }
-    );
+    )
     if (!data)
       return res.status(400).json({ message: `User not found`, success: false });
     return res.status(200).json({ message: `user found`, data, success: true });

@@ -1,5 +1,6 @@
 import User_Model from "../Models/user.model.js";
 import Follow_Model from "../Models/follow.model.js";
+import mongoose from "mongoose";
 export const followUnfollow = async (req, res) => {
   const { _id } = req.user;
   const Tid = req.params.id;
@@ -120,7 +121,7 @@ export const checkIfUserFollows = async (req, res) => {
 
 export const numbers = async (req, res) => {
   try {
-    const { _id } = req.user;
+    const _id = req.params.id;
     const result = await Follow_Model.findOne({ user: _id });
     if (!result) {
       return res
@@ -155,3 +156,21 @@ export const friendList = async (req, res) => {
     .status(200)
     .json({ message: ` ${data.length} user found`, data, success: true });
 };
+export const checkFollowing = async (req , res) => {
+  try {
+    const {_id} = req.user;
+    const {id} = req.params;
+
+    if(!id || !_id){
+      return res.status(400).json({message:`Invalid ID` , success:false})
+    }
+    const data = await Follow_Model.findOne({user:_id});
+    let flag = data.following.includes(new mongoose.Types.ObjectId(id))
+    
+    return res.status(200).json({flag:flag , success:true})
+
+  } catch (error) {
+    console.log(`Error in checkFollowing: ${error.message}`);
+    return res.status(500).json({ message: "Server Error", success: false });
+  }
+} 
